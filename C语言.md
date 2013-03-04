@@ -8,15 +8,15 @@ C语言
     +   只有在使用位域和二进制掩码时, 才可以使用无符号数.
     +   在表达式中使用强制类型转换, 使操作数均为有符号或者无符号, 这样就不必由编译器来选择结果的类型.
 2.  `int` 和 `unsigned int` 转换.
-    +   `int` 转换为 `unsigned int`, 标准规定 当 `int` 为负数时候, 转换后的值是 `int + UINT_MAX + 1`, 技术上 `UINT_MAX + 1 = 2^N `, `N` 是 `unsigned int` bit数.  [[*参考]][2] 
-    +   `unsigned int` 转换为 `int` 发生溢出时的行为是 ANSI C 未定义的(undefined). 虽然大多数编译器的实现都是bit不变, 但是不应依赖这个行为. 若要使用此转换可采用指针 `*((int *)(&uint))` . [[*参考]][3]
+    +   `int` 转换为 `unsigned int`, 标准规定 当 `int` 为负数时候, 转换后的值是 `int + UINT_MAX + 1`, 技术上 `UINT_MAX + 1 = 2^N `, `N` 是 `unsigned int` bit 数.  [[*参考]][2] 
+    +   `unsigned int` 转换为 `int` 发生溢出时的行为是 ANSI C 未定义的(undefined). 虽然大多数编译器的实现都是 bit 不变, 但是不应依赖这个行为. 若要使用此转换可采用指针 `*((int *)(&uint))` . [[*参考]][3]
     +   `signed int` 和 `unsigned int` 间转换发生溢出时的行为, 其实就是 `signed` 和 `unsigned` 类型本身发生溢出时的行为. C 标准定义了 `unsigned` 类型发生溢出的行为, 也就是 wrap-around ; C 标准未定义 `signed` 类型发生溢出时的行为, 这个结果是依赖编译器的实现. [[*参考]][4]
 
-3.  将无符号整型初始化为 bit 全 1 的通用可移植做法是用 `-1` 去初始化. 这其实是利用了 `unsigned` 整型溢出时的行为. 使用 `~` 有时会出现意外的结果, 因为这与操作数类型有关. [[*参考]][5]
+3.  将无符号整型初始化为 bit 全 1 的通用可移植做法是用 `-1` 初始化. 这其实是利用了 `unsigned` 整型溢出时的行为. 使用 `~` 有时会出现意外的结果, 因为这与操作数类型有关. [[*参考]][5]
 
 ### 字符串
-1.  使用安全、*可移植*的字符串操作函数.
-    +   使用 `snprintf` 代替 `sprintf`. 不要使用 `strcpy` 和 `strcat`, 它们的改进版本 `strncpy` 和 `strncat` 也是雷区重重, 要么小心的使用它们, 要么就用 `snprinft` 来替代他们. [[*参考]][6] 
+1.  使用安全, *可移植*的字符串操作函数.
+    +   用 `snprintf` 代替 `sprintf`. 不要使用 `strcpy` 和 `strcat`, 它们的改进版本 `strncpy` 和 `strncat` 也是雷区重重, 要么小心地使用它们, 要么就用 `snprinft` 来替代他们. [[*参考]][6] 
     +   不要勉强自己编写安全的字符串操作函数. 可以使用开源的稳定的代码, 比如 OpenBSD 的 `strlcat` 和 `strlcpy`, 或者是平台/工具提供的函数, 比如 Microsoft 提供的安全版本的字符串操作函数, 为了可移植性可以进行简易封装.
     
 [1]: http://book.douban.com/annotation/24821598/ "《C专家编程》24页"
