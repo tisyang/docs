@@ -1,0 +1,110 @@
+编写国际化软件的一些提示
+=======================
+
+笔记，摘自 [Internationalization Tips][1]，基于国际化工具 `GNU gettext`。
+
+### 1.  不要分割整句
+
+例如
+
+    String s = i18n("Press OK to delete ") + n + i18n(" files");
+
+这样把一句话拆成几部分，在抽取字符串资源后，翻译人员在看到 `" files"`
+这样的字符串时会莫名其妙，翻译到其他语言里很有可能意思不伦不类，表达不清。而且
+像 `" files"` 这样短的词会整个程序中出现多次，并不能保证在每个语境下都是同一个
+意思。
+
+这种情况下应该使用占位符
+
+    printf(i18n("Press OK to delete %d files"), n);
+
+这里还提到了一个C语言里的[技巧][2]：编译时于预处理器会将连续多行的字符串字面量
+自动拼接，合并成一个，这样在写很长的字符串时，可以拆成多行来写。
+
+### 2. 避免同时使用多个占位符
+
+例如
+
+    printf("Press OK to %s %d file(s)", action, number);
+
+像这样一条句子里使用了两个占位符，由于后面的参数位置写死在代码里，在翻译时，翻
+译字符串中的占位符也必须依照参数的顺序，在某些语言习惯里，可能造成翻译困难或者
+不够地道。比如
+
+    printf("You should say %s when %s comes.", hello, somebody);
+
+当翻译成中文时
+
+    printf("当%s来的时候，你得说%s", somebody, hello);
+
+后面的参数需要调整顺序。
+
+由于C语言的 `printf` 族函数并不提供类似 C#、Python 那种 `{0}`
+带序号的占位符用法，所以使用多个占位符不是明智之举。虽然标准库不支持，但是有一
+些第三方库可以做到，例如 win32 下的 `FormatMessage` 和 java 的 `MessageFormat`
+，还可以考虑 Qt。
+
+其实个人觉得 Ruby 中的变量名占位符更好，翻译时候翻译人员可以根据有意义的变量名
+来翻译，而不是数字。
+
+当然，和作者再三强调的一样，最好的方法就是**避免**使用多个占位符。
+
+### 3. 多复数处理
+
+在某些语言中，单数和复数表达可能不一样。
+
+例如
+
+    printf(i18n("You have won %d point(s)!"), n);
+
+当 `n == 1` 时，输出 `"1 points"` 就欠妥当，最好修改成
+
+    if (n == 1)
+        printf(i18n("You have won one point!"));
+    else
+        printf(i18n("You have won %d points!"), n);
+
+**注意**，这还没完，并不是所有语言就仅仅区分 `n == 1` 和 `n != 1` 这两种情况，
+有些语言中，当 `n == 101` 时，也应当使用单数。
+
+用硬编码来处理所有这些情行则会把代码弄得臃肿不堪，gettext 则提供了解决方法：`ngettext`。
+
+### 4. 翻译歧义
+
+在编码时要注意多义词的处理。比如英文单词 _right_ ，表示方向时是 _右_ 的意思，
+在表示对错时是 _对_ 的意思。这个时候就需要给字符串加上前缀来以示区别。
+
+作者给了个菜单项的例子，使用 `|` 来作为前缀
+
+    Menu|File
+    Menu|Printer
+    Menu|File|Open
+    Menu|File|New
+    Menu|Printer|Select
+    Menu|Printer|Open
+
+然后使用一个新函数来查找翻译字符串
+
+    char * sgettext (const char *msgid)
+    {
+        char *msgval = gettext (msgid);
+        if (msgval == msgid)
+            msgval = strrchr (msgid, '|') + 1;
+        return msgval;
+    }
+
+这个方法有几个缺点
+
+    *   包含了 `|` 字符的字符串不能这样来处理
+    *   翻译人员必须清楚只有 `|` 字符之后的字符串才是翻译的内容
+    *   开发者也许只用 `sgettext` 函数，并没有注意到字符串是否包含有 `|`
+
+从这点上看，个人认为 MSVS 那套字符串也是有优势的。
+
+
+
+
+
+[1]: http://www.heiner-eichmann.de/autotools/i18n_tips.html "An Internationalized Software Project With Auto Tools"
+[2]: http://en.wikipedia.org/wiki/C_syntax#String_literal_concatenation  "String literal concatenation"
+
