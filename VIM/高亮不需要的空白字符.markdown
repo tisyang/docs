@@ -1,0 +1,29 @@
+Vim中高亮不需要的空白符
+====================
+
+本文提到的不需要的空白符有两类：
+
+1. 附在行尾的空白。行尾空白通常是由于不小心添加到的，在编辑器下也不可见，但它会对版本控制造成不必要的影响。这里有个需要注意的地方，标准 Markdown [语法][1]里，行尾添加
+2个以上空格表示段落内强制换行。
+
+2. 缩进中混用制表符和空白符。在代码缩进中混用制表符和空格不是个好习惯，会造成在不同编辑器、不同制表符设置下代码显示格式错乱，更别说 Python 这样对格式要求苛刻的语言了。
+
+在 `.vimrc` 文件中添加如下代码
+
+    highlight ExtraWhitespace ctermbg=red guibg=red
+    autocmd BufWinEnter * match ExtraWhitespace /\s\+$\| \+\ze\t\+\|\t\+\zs \+/
+
+就可以高亮提到的两类空白符，这里稍作解释。
+
+1. 会将行尾空白符和制表空格混排中的空格都高亮为红色
+2. 使用 `autocmd BufWinEnter *` 是因为 `match` 只能对当前窗口有效，具体可以查看 `:help match`
+3. 用于匹配的正则表达式分3个多选组，`\s\+$` 用于匹配行尾空白符，` \+\ze\t\+` 用于匹配紧邻制表符前的空格，`\t\+\zs \+` 用于匹配紧跟制表符后的空格。当然，也可以选择高亮混排中的制表符而不是空格，这样写，` \+\zs\t\+` 和 `\t\+\ze \+`
+
+- - - 
+参考资料
+
+1. [Highlight unwanted spaces][2]
+
+
+[1]: http://daringfireball.net/projects/markdown/syntax#block "Markdown: Syntax"
+[2]: http://vim.wikia.com/wiki/Highlight_unwanted_spaces "Highlight unwanted spaces - Vim Wiki"
